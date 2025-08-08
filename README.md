@@ -18,9 +18,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 # Incomplete Bessel Function on top of EpsteinLib
 
 This is a fork of EpsteinLib that includes the incomplete Bessel function,
+
 $$
 G_{\nu}(\boldsymbol{k},\boldsymbol{r})=2\int_0^1 t^{-\nu} e^{-\pi \boldsymbol{k}^2/t^2} e^{-\pi \boldsymbol{r}^2 t^2}\, \frac{\mathrm d t}{t}
 $$
+
 The function is implemented as
 ```c
 double incomplete_bessel_g(
@@ -36,7 +38,8 @@ GBessel[\[Nu],k,r]
 ```
 
 #### Benchmarks
-![[fig_besselError.png]]
+![Bessel Error Plot](examples/mathematica/plots/fig_besselError.png)
+
 #### installation
 
 The library can be installed by cloning this repo and following the EpsteinLib installation instructions.
