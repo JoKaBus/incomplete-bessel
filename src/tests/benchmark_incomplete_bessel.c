@@ -79,16 +79,15 @@ int benchmark(double nu, char zetaDataString[]) {
     double y[1];
 
     double complex zetaReg;
-    double offset = 0.1;
     double elapsedTime;
     int iterations = 25;
     double *elapsedTimes = malloc(iterations * sizeof(double));
     clock_t timeStart;
     clock_t timeEnd;
-    for (int i = 0; i < 10 + 1; i++) {
-        for (int j = 0; j < 10 + 1; j++) {
-            x[0] = i * 0.1 + offset;
-            y[0] = j * 0.1 + offset;
+    for (int i = 1; i < 40 + 1; i++) {
+        for (int j = 1; j < 40 + 1; j++) {
+            x[0] = i * 0.1;
+            y[0] = j * 0.1;
             // zeta
             for (int n = 0; n < iterations; n++) {
                 timeStart = clock();
@@ -136,7 +135,7 @@ int num4() {
  * @return  0 on successful execution.
  */
 int num2() {
-    double nu = -4.;
+    double nu = -2.;
     char zetaDataString[MAX_PATH_LENGTH];
 
     if (snprintf(zetaDataString, MAX_PATH_LENGTH, "%s/incomplete_bessel_%s.csv",
@@ -153,7 +152,7 @@ int num2() {
  * @return  0 on successful execution.
  */
 int nu0() {
-    double nu = -4.;
+    double nu = 0.;
     char zetaDataString[MAX_PATH_LENGTH];
 
     if (snprintf(zetaDataString, MAX_PATH_LENGTH, "%s/incomplete_bessel_%s.csv",
@@ -170,7 +169,7 @@ int nu0() {
  * @return  0 on successful execution.
  */
 int nu2() {
-    double nu = -4.;
+    double nu = 2.;
     char zetaDataString[MAX_PATH_LENGTH];
 
     if (snprintf(zetaDataString, MAX_PATH_LENGTH, "%s/incomplete_bessel_%s.csv",
