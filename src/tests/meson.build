@@ -66,6 +66,15 @@ benchmark_gamma = executable('epsteinlib_benchmark_gamma',
     link_with : epsteinlib
 )
 
+benchmark_incomplete_bessel = executable('epsteinlib_benchmark_incomplete_bessel',
+    ['benchmark_incomplete_bessel.c'],
+    include_directories : incdir,
+    dependencies: deps,
+    install: false,
+    override_options: override_options,
+    link_with : epsteinlib
+)
+
 test('test_epsteinZeta',
     test_epsteinZeta,
     workdir: meson.current_source_dir()

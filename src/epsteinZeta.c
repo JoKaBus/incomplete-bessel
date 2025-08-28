@@ -21,6 +21,7 @@
 #include "crandall.h"
 #include "epsteinZeta.h"
 #include "gamma.h"
+#include "stdbool.h"
 #include "tools.h"
 #include "zeta.h"
 #include <gsl/gsl_sf_bessel.h>
@@ -93,6 +94,19 @@ double complex epsteinZetaRegDer(double nu, unsigned int dim, const double *a,
 }
 
 /**
+ * @brief Calculates the bessel function of the third kind.
+ * @param[in] nu: first input value.
+ * @param[in] y: second input value.
+ * @return K as in https://dlmf.nist.gov/10.25#E3
+ */
+double bessel_k(double nu, double y) {
+    //        if (nu == (double)((int) nu)) {
+    //            return gsl_sf_bessel_Kn(nu, y);
+    //        }
+    return gsl_sf_bessel_Knu(fabs(nu), y);
+};
+
+/**
  * @brief Calculates the incomplete bessel function.
  * @param[in] nu: exponent of the function.
  * @param[in] dim: dimension of the input vectors.
@@ -125,15 +139,14 @@ double incomplete_bessel_g(double nu, unsigned int dim, const double *k,
         return crandall_g(dim, nu, k, 1., assignzArgBound(nu));
     }
 
-    // Swap not implemented yet, since K is missing
-    //    // Reflect parameters for upper half-plane
-    //    bool swap = (x + 0.1 < y);
-    //    if (swap) {
-    //        s = -s;
-    //        double z = x;
-    //        x = y;
-    //        y = z;
-    //    }
+    // Reflect parameters for upper half-plane
+    bool swap = (x + 0.1 < y);
+    if (swap) {
+        s = -s;
+        double z = x;
+        x = y;
+        y = z;
+    }
 
     double result = 0.0;
 
@@ -181,13 +194,11 @@ double incomplete_bessel_g(double nu, unsigned int dim, const double *k,
         }
         result = N / D;
     }
-    result = result * 0 + gsl_sf_bessel_Knu(2, 0.1);
 
-    //    // Reflect result for upper half-plane
-    //    if (swap) {
-    //        result = 2.0 * pow(x / y, s / 2.0) * bessel_K(-s, 2.0 * sqrt(x * y)) -
-    //        result;
-    //    }
-
+    // Reflect result for upper half-plane
+    if (swap) {
+        result =
+            2.0 * pow(x / y, s / 2.0) * bessel_k(-s, 2.0 * sqrt(x * y)) - result;
+    }
     return result;
 }

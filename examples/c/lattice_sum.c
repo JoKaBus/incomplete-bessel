@@ -35,13 +35,22 @@
 int main() {
 
     // Madelung constant found in literature
-    double madelungRef = 199.5039646421141;
-    int dim = 3;
-    double x[] = {0.1, 0.1, 0.1}; // no shift
-    double y[] = {0.5, 0.5, 0.5}; // alternating sum
-    double nu = 1.0;
+    double madelungRef = 0.000022500045995757836;
+    int dim = 1;
+    double x[] = {1.3}; // no shift
+    double y[] = {1.2}; // alternating sum
+    double nu = 2.1;
     double madelung = creal(incomplete_bessel_g(nu, dim, x, y));
-    printf("Bessel Ref:\t %.16lf\n", creal(madelung));
+    printf("Bessel Ref:\t\t\t %.16lf\n", creal(madelung));
+    printf("Reference value:\t\t %.16lf\n", madelungRef);
+    printf("Relative error:\t\t\t +%.2e\n",
+           fabs(madelungRef - madelung) / fabs(madelungRef));
+
+    madelungRef = 0.00003616792891719726;
+    x[0] = 1.2; // no shift
+    y[0] = 1.3; // alternating sum
+    madelung = creal(incomplete_bessel_g(nu, dim, x, y));
+    printf("Bessel Ref:\t\t\t %.16lf\n", creal(madelung));
     printf("Reference value:\t\t %.16lf\n", madelungRef);
     printf("Relative error:\t\t\t +%.2e\n",
            fabs(madelungRef - madelung) / fabs(madelungRef));
