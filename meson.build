@@ -12,6 +12,9 @@ cc = meson.get_compiler('c')
 deps = []
 deps += cc.find_library('m', required : true)
 
+gsl_dep = dependency('gsl', required : true)
+deps += gsl_dep
+
 # Initialize source files list
 # Populate in subdirectories using zeta_src +=
 zeta_src = []

@@ -41,7 +41,11 @@
             ]
         ))
       ];
-      buildInputs = [];
+
+      buildInputs = with pkgs; [
+        gsl
+      ];
+
       mesonBuildType = buildtype;
       mesonFlags = ["-Dbuild_python=false"];
 
@@ -82,7 +86,10 @@
         python3Packages.numpy
       ];
       pyproject = true;
-      buildInputs = [];
+
+      buildInputs = with pkgs; [
+        gsl
+      ];
 
       nativeCheckInputs = with pkgs; [
         python3Packages.unittestCheckHook

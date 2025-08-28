@@ -35,14 +35,13 @@
 int main() {
 
     // Madelung constant found in literature
-    double madelungRef = -1.7475645946331821906362120355443974;
+    double madelungRef = 199.5039646421141;
     int dim = 3;
-    double m[] = {1, 0, 0, 0, 1, 0, 0, 0, 1}; // identity matrix for whole numbers
-    double x[] = {0, 0, 0};                   // no shift
-    double y[] = {0.5, 0.5, 0.5};             // alternating sum
+    double x[] = {0.1, 0.1, 0.1}; // no shift
+    double y[] = {0.5, 0.5, 0.5}; // alternating sum
     double nu = 1.0;
-    double madelung = creal(epsteinZeta(nu, dim, m, x, y));
-    printf("Madelung sum in 3 dimensions:\t %.16lf\n", creal(madelung));
+    double madelung = creal(incomplete_bessel_g(nu, dim, x, y));
+    printf("Bessel Ref:\t %.16lf\n", creal(madelung));
     printf("Reference value:\t\t %.16lf\n", madelungRef);
     printf("Relative error:\t\t\t +%.2e\n",
            fabs(madelungRef - madelung) / fabs(madelungRef));

@@ -23,6 +23,7 @@
 #include "gamma.h"
 #include "tools.h"
 #include "zeta.h"
+#include <gsl/gsl_sf_bessel.h>
 
 /**
  * @brief calculates the Epstein zeta function.
@@ -180,6 +181,7 @@ double incomplete_bessel_g(double nu, unsigned int dim, const double *k,
         }
         result = N / D;
     }
+    result = result * 0 + gsl_sf_bessel_Knu(2, 0.1);
 
     //    // Reflect result for upper half-plane
     //    if (swap) {
