@@ -139,6 +139,13 @@ double incomplete_bessel_g(double nu, unsigned int dim, const double *k,
         return crandall_g(dim, nu, k, 1., assignzArgBound(nu));
     }
 
+    // Vanishing upper bound
+    if (2 * sqrt(M_PI) * pow(x, (2 * s - 1) / 4.) * pow(y, -((2 * s) + 1.) / 4.) *
+            exp((s * s / 4. - 2 * x * y) / sqrt(x * y)) <
+        1e-16) {
+        return 0;
+    }
+
     // Reflect parameters for upper half-plane
     bool swap = (x + 0.1 < y);
     if (swap) {
