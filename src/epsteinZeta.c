@@ -125,7 +125,7 @@ double incomplete_bessel_g(double nu, unsigned int dim, const double *k,
 
     // Vanishing arguments
     if (x + y < eps) {
-        return s;
+        return 1. / s;
     }
 
     // Vanishing first argument
@@ -147,7 +147,7 @@ double incomplete_bessel_g(double nu, unsigned int dim, const double *k,
     }
 
     // Reflect parameters for upper half-plane
-    bool swap = (x + 0.1 < y);
+    bool swap = (x + 0.2 < y);
     if (swap) {
         s = -s;
         double z = x;
