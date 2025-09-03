@@ -78,16 +78,20 @@ int benchmark(double nu, char zetaDataString[]) {
     double x[1];
     double y[1];
 
-    double complex zetaReg;
-    double elapsedTime;
+    double complex zetaReg = 0.;
+    double elapsedTime = 0.;
     int iterations = 25;
     double *elapsedTimes = malloc(iterations * sizeof(double));
     clock_t timeStart;
     clock_t timeEnd;
-    for (int i = 1; i < 40 + 1; i++) {
-        for (int j = 1; j < 40 + 1; j++) {
-            x[0] = i * 0.1;
-            y[0] = j * 0.1;
+    for (int i = 0; i < 80 + 1; i++) {
+        for (int j = 0; j < 80 + 1; j++) {
+            if ((i == 0 && j == 0 && nu == 0) ||
+                (i == 0 && j != 0 && (nu == 0 || nu == 2))) {
+                continue;
+            }
+            x[0] = i * 0.05;
+            y[0] = j * 0.05;
             // zeta
             for (int n = 0; n < iterations; n++) {
                 timeStart = clock();
