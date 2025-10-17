@@ -10,7 +10,7 @@
 (*Micromagnetics Replicated*)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Setup and Auxiliary Functions*)
 
 
@@ -54,7 +54,7 @@ SetOptions[MaTeX,FontSize->18];
 Colors=(("DefaultPlotStyle"/.(Method/. Charting`ResolvePlotTheme["Scientific",ListLinePlot]))/. Directive[x_,__]:>x);
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Crandall and Bessel Functions*)
 
 
@@ -166,7 +166,7 @@ GBesselDer[\[Nu]_,k_,r_,\[Alpha]_]:=Total[Flatten[Table[
 (**)
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Far Field Zeta Function*)
 
 
@@ -232,7 +232,7 @@ ZetaLFarFieldCorrDer[\[Nu]_,A_,r_,c_,m_,nNear_,\[Alpha]Max_:2]:=Module[{d,\[Alph
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Direct Sum over the Short Range Double Integral*)
 
 
@@ -278,7 +278,7 @@ UNearCube[\[Nu]_,A_,r_,c_,m_,nNear_]:=Module[{d,n,zRangeNear,res}
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Potential Function*)
 
 
@@ -330,7 +330,7 @@ UCube[\[Nu]_,A_,r_,c_,m_,nNear_,\[Alpha]Max_]:=
 (*DzAsymptotic[NN_]:=N[1/3+DirichletBeta[3/2]Zeta[3/2]/(Pi*NN^3),60]*)
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Asymptotic Expansion Error*)
 
 
@@ -383,4 +383,66 @@ pDeviation=ListLogLogPlot[
 		}
 	}
 	,ImageSize->400
+]
+
+
+(* ::Section::Closed:: *)
+(*Incomplete Bessel Error Values*)
+
+
+(* ::Text:: *)
+(*Load incomplete Bessel reference values as obtained by C implementation. To regenerate those values, compile the library *)
+(**)
+(*	meson setup build && meson compile -C build*)
+(**)
+(*and then run*)
+(**)
+(*	./build/src/tests/epsteinlib_benchmark_incomplete_bessel*)
+
+
+tabnum4 = Import[NotebookDirectory[]<>"../../src/tests/csv/incomplete_bessel_num4.csv"];
+tabnum2 = Import[NotebookDirectory[]<>"../../src/tests/csv/incomplete_bessel_num2.csv"];
+tabnu0 = Import[NotebookDirectory[]<>"../../src/tests/csv/incomplete_bessel_nu0.csv"];
+tabnu2 = Import[NotebookDirectory[]<>"../../src/tests/csv/incomplete_bessel_nu2.csv"];
+
+
+(* ::Text:: *)
+(*Define high-precision reference function by integral representation.*)
+
+
+GBesselRef[nu_,k_,r_]:=Piecewise[{
+	{-2/nu,PossibleZeroQ[k . k]&&PossibleZeroQ[r . r]}
+	,{NIntegrate[
+		2 t^(-nu)Exp[-Pi k . k/t^2]Exp[-Pi r . r t^2]/t
+		,{t,0,1}
+		,PrecisionGoal->40
+		,AccuracyGoal->40
+		,WorkingPrecision->40
+		,WorkingPrecision->60
+	]
+	,True}
+}]
+
+
+(* ::Text:: *)
+(*Generate error tables. Takes less than 100 seconds an a standard laptop with 12 cores.*)
+
+
+{evalTime,{tabnum4Err,tabnum2Err,tabnu0Err,tabnu2Err}}=AbsoluteTiming@Table[
+	ParallelTable[With[
+		{nu={-4,-2,0,2}[[i]],k=vals[[1]],r=vals[[2]],num=vals[[3]],numimag=vals[[4]],time=vals[[5]]}
+		,{k,r,Error[Quiet@GBesselRef[nu,{k},{r}],num],time}
+		],{vals,{tabnum4,tabnum2,tabnu0,tabnu2}[[i]]}]
+	,{i,4}
+];
+
+
+(* ::Text:: *)
+(*Show median and maximum timing and errors.*)
+
+
+TableForm[
+	{Median[#[[All,3]]],Max[#[[All,3]]],Median[#[[All,4]]],Max[#[[All,4]]]}&/@{tabnum4Err,tabnum2Err,tabnu0Err,tabnu2Err}
+	,TableHeadings->(MaTeX[#]&/@{{-2,0,2,4},{"E_{\\rm med}","E_{\\rm max}","t_{\\rm med}","t_{\\rm max}"}})
+	,TableAlignments->Center
 ]
