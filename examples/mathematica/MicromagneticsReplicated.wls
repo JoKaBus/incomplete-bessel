@@ -233,7 +233,7 @@ ZetaLFarFieldCorrDer[\[Nu]_,A_,r_,c_,m_,nNear_,\[Alpha]Max_:2]:=Module[{d,\[Alph
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Direct Sum over the Short Range Double Integral*)
 
 
@@ -279,7 +279,7 @@ UNearCube[\[Nu]_,A_,r_,c_,m_,nNear_]:=Module[{d,n,zRangeNear,res}
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Potential Function*)
 
 
@@ -331,8 +331,176 @@ UCube[\[Nu]_,A_,r_,c_,m_,nNear_,\[Alpha]Max_]:=
 (*DzAsymptotic[NN_]:=N[1/3+DirichletBeta[3/2]Zeta[3/2]/(Pi*NN^3),60]*)
 
 
-(* ::Section:: *)
-(*Asymptotic Expansion Error*)
+(* ::Section::Closed:: *)
+(*Error Table of the Generalized Potential Function*)
+
+
+(* ::Text:: *)
+(*Values of lattice matrix A, near term summation limit nNear and maximum derivative \[Alpha], derivative vectors m and cuboid geometries c.*)
+
+
+{A0,nNear0,\[Alpha]Max0}={
+	IdentityMatrix@2
+	,1
+	,2
+};
+m0={
+	{1,1,0}
+	,{1,0,1}
+	,{0,0,2}
+};
+c0={
+	{1,1,1}/50
+	,{1,1,1}/100
+	,{1,2,3}/100
+};
+
+
+(* ::Text:: *)
+(*We want to compute the maximum error over a range of positions r and exponents nu.*)
+
+
+rRange={1/4,1/4,#/10}&/@Range[5];
+\[Nu]Range=Range[10,14,1/10];
+
+
+(* ::Text:: *)
+(*To decrease evaluation times in this notebook, a random value of the grid of values and a random value for the derivative m and the geometry c is chosen. To regenerate the full error table, remove the following lines.*)
+
+
+rRange={RandomChoice[rRange]}
+\[Nu]Range={RandomChoice[\[Nu]Range]}
+c0={RandomChoice[c0]}
+m0={RandomChoice[m0]}
+
+
+(* ::Text:: *)
+(*Generate the error(s) of the generalized potential U. A single evaluation takes less than 70 seconds on a standard laptop with 12 cores.*)
+
+
+errSumFull=Table[
+	Module[{t,block,errMax}
+		,{t,block}=AbsoluteTiming@Table[
+				Table[
+				{
+					\[Nu]
+					,ErrorRel[
+						UCube[\[Nu],A0,r,c,m,nNear0,\[Alpha]Max0]
+						,UNearCube[\[Nu],A0,r,c,m,14]
+					]
+				}
+				,{r,rRange}
+			],{\[Nu],\[Nu]Range}
+		]
+		;errMax=Max@block[[All,#]][[All,2]]&/@Range[Length[rRange]]
+		;Print["errMax: ",errMax,"  c: ",c,"  m: ",m, "  evaluation time: ",t]
+		;block
+	],{c,c0}
+	,{m,m0}
+];
+
+
+(* ::Section::Closed:: *)
+(*Direct Summation Error*)
+
+
+(* ::Text:: *)
+(*Exponents \[Nu] and truncation cutoffs L for the direct summation error as a function of L. To replicate the figure from the paper, set *)
+(**)
+(*	\[Nu]Range=Range[1, 11, 2]*)
+(*	LRange=Range[0,10,2]*)
+
+
+\[Nu]Range={1,11};
+LRange=Range[1,10,3];
+
+
+(* ::Text:: *)
+(*Error table of the direct summation. Takes less that 80 seconds on a standard laptop with 12 cores.*)
+
+
+"evaluation time"->AbsoluteTiming[
+	sumTab=Table[
+		With[{lim=UCube[\[Nu],IdentityMatrix@2,{1,1,1}/2,{1,1,1}/100,{2,0,0},1,2]}
+			,Table[
+				{
+					L
+					,ErrorRel[
+						UNearCube[\[Nu],IdentityMatrix@2,{1,1,1}/2,{1,1,1}/100,{2,0,0},L]
+						,lim
+					]
+				}
+				,{L,LRange}
+				]
+			]
+		,{\[Nu],\[Nu]Range}
+	]
+][[1]]
+
+
+(* ::Text:: *)
+(*Show the error of the direct summation as a function of the cube length L.*)
+
+
+Show[
+		ListLogLogPlot[
+			sumTab
+			,PlotTheme->"Scientific"
+			,PlotRange->{{1-0.1,11},{100,2 10^(-15)}}
+			,FrameLabel->{
+			{MaTeX@"E_{\\rm{rel}}",None}
+			,{MaTeX@"N_{\\rm{cut}}",None}
+			}
+			,PlotStyle->{PointSize[0.03]}
+			,GridLines->{{1,2,5,10},10^Range[-14,2,5]}
+			,FrameTicks->{
+				{
+					Join[
+					{10^#,MaTeX[If[#>=-1,ToString[10^#],"10^{"<>ToString[#]<>"}"]],{0.014,0}}&/@Range[-14,2,5]
+					,{#,,{0.008,0}}&/@ Flatten[Table[i 10^j,{i,{1}},{j,-20,1,1}]]
+					]
+					,Join[
+					{10^#,,{0.014,0}}&/@Range[-16,0,5]
+					,{#,,{0.008,0}}&/@ Flatten[Table[i 10^j,{i,{1}},{j,-20,1,1}]]
+					]
+				}
+				,{
+					Join[
+					{#,MaTeX[ToString@#],{0.014,0}}&/@{1,2,5,10}
+					,{#,,{0.008,0}}&/@Join[{3/2},Range[1,10,1]]
+					]
+					,Join[
+					{#,,{0.014,0}}&/@{1,2,5,10}
+					,{#,,{0.008,0}}&/@Join[{3/2},Range[1,10,1]]
+					]
+				}
+				}
+		]
+		,Show[
+			Table[
+				LogLogPlot[n^-\[Nu]Range[[i]] 10^\[Nu]Range[[i]] sumTab[[i]][[-1]][[2]]
+				,{n,3,10}
+				,PlotStyle->Thick
+				,ColorFunction->(Directive[Colors[[i]],Opacity[Rescale[#1,{0,10}]]]&)
+				,ColorFunctionScaling->False
+				],{i,Length@\[Nu]Range}
+			],PlotRange->All
+		]
+		,ListLogPlot[
+			ConstantArray[{{100,100}},10]
+			,PlotStyle->{PointSize[0.023]}
+			,PlotTheme->"Scientific"
+			,PlotLegends->Placed[
+				Map[MaTeX["\\nu ="<>ToString[#,InputForm]]&,\[Nu]Range]
+			,{1.,0.588}
+			]
+		]
+		,ImageSize->500
+]
+
+
+(* ::Section::Closed:: *)
+(*Demagnetization Asymptotic Expansion Error*)
 
 
 (* ::Text:: *)
@@ -347,7 +515,7 @@ DzAsymptoticTab=ParallelTable[DzAsymptotic[NN],{NN,NNRange}];
 (*Calculate high-precision demagnetization values. Takes less than 40 seconds on a standard laptop with 12 kernels.*)
 
 
-AbsoluteTiming[DzTab=Table[Dz[NN,3,2],{NN,NNRange}]]
+"evaluation time"->AbsoluteTiming[DzTab=Table[Dz[NN,3,2],{NN,NNRange}]][[1]]
 
 
 (* ::Text:: *)
@@ -387,7 +555,7 @@ pDeviation=ListLogLogPlot[
 ]
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Incomplete Bessel Error Values*)
 
 
@@ -429,7 +597,7 @@ GBesselRef[nu_,k_,r_]:=Piecewise[{
 (*Generate error tables. Takes less than 100 seconds an a standard laptop with 12 cores.*)
 
 
-AbsoluteTiming[
+"evaluation time"->AbsoluteTiming[
 	{tabnum4Err,tabnum2Err,tabnu0Err,tabnu2Err}=Table[
 		ParallelTable[With[
 			{nu={-4,-2,0,2}[[i]],k=vals[[1]],r=vals[[2]],num=vals[[3]],numimag=vals[[4]],time=vals[[5]]}
@@ -437,7 +605,7 @@ AbsoluteTiming[
 			],{vals,{tabnum4,tabnum2,tabnu0,tabnu2}[[i]]}]
 		,{i,4}
 	];
-]
+][[1]]
 
 
 (* ::Text:: *)
@@ -448,99 +616,4 @@ TableForm[
 	{Median[#[[All,3]]],Max[#[[All,3]]],Median[#[[All,4]]],Max[#[[All,4]]]}&/@{tabnum4Err,tabnum2Err,tabnu0Err,tabnu2Err}
 	,TableHeadings->(MaTeX[#]&/@{{-2,0,2,4},{"E_{\\rm med}","E_{\\rm max}","t_{\\rm med}","t_{\\rm max}"}})
 	,TableAlignments->Center
-]
-
-
-(* ::Section:: *)
-(*Demagnetization Asymptotic Expansion Scaling*)
-
-
-(* ::Text:: *)
-(*Exponents \[Nu] and truncation cutoffs L for the asymptotic expansion error. To replicate the figure from the paper, set *)
-(**)
-(*	\[Nu]Range=Range[1, 11, 2]*)
-(*	LRange=Range[0,10,2]*)
-
-
-\[Nu]Range={1,11};
-LRange=Range[1,10,3];
-
-
-(* ::Text:: *)
-(*Error table of the asymptotic expansion. Takes less that 80 seconds on a standard laptop with 12 cores.*)
-
-
-AbsoluteTiming[
-	sumTab=Table[
-		With[{lim=UCube[\[Nu],IdentityMatrix@2,{1,1,1}/2,{1,1,1}/100,{2,0,0},1,2]}
-			,Table[
-				{
-					L
-					,ErrorRel[
-						UNearCube[\[Nu],IdentityMatrix@2,{1,1,1}/2,{1,1,1}/100,{2,0,0},L]
-						,lim
-					]
-				}
-				,{L,LRange}
-				]
-			]
-		,{\[Nu],\[Nu]Range}
-	]
-]
-
-
-Show[
-		ListLogLogPlot[
-			sumTab
-			,PlotTheme->"Scientific"
-			,PlotRange->{{1-0.1,11},{100,2 10^(-15)}}
-			,FrameLabel->{
-			{MaTeX@"E_{\\rm{rel}}",None}
-			,{MaTeX@"N_{\\rm{cut}}",None}
-			}
-			,PlotStyle->{PointSize[0.03]}
-			,GridLines->{{1,2,5,10},10^Range[-14,2,5]}
-			,FrameTicks->{
-				{
-				Join[
-				{10^#,MaTeX[If[#>=-1,ToString[10^#],"10^{"<>ToString[#]<>"}"]],{0.014,0}}&/@Range[-14,2,5]
-				,{#,,{0.008,0}}&/@ Flatten[Table[i 10^j,{i,{1}},{j,-20,1,1}]]
-				]
-				,Join[
-				{10^#,,{0.014,0}}&/@Range[-16,0,5]
-				,{#,,{0.008,0}}&/@ Flatten[Table[i 10^j,{i,{1}},{j,-20,1,1}]]
-				]
-				}
-				,{
-				Join[
-				{#,MaTeX[ToString@#],{0.014,0}}&/@{1,2,5,10}
-				,{#,,{0.008,0}}&/@Join[{3/2},Range[1,10,1]]
-				]
-				,Join[
-				{#,,{0.014,0}}&/@{1,2,5,10}
-				,{#,,{0.008,0}}&/@Join[{3/2},Range[1,10,1]]
-				]
-				}
-				}
-		]
-		,Show[
-			Table[
-				LogLogPlot[n^-\[Nu]Range[[i]] 10^\[Nu]Range[[i]] sumTab[[i]][[-1]][[2]]
-				,{n,3,10}
-				,PlotStyle->Thick
-				,ColorFunction->(Directive[Colors[[i]],Opacity[Rescale[#1,{0,10}]]]&)
-				,ColorFunctionScaling->False
-				],{i,Length@\[Nu]Range}
-			],PlotRange->All
-		]
-		,ListLogPlot[
-			ConstantArray[{{100,100}},10]
-			,PlotStyle->{PointSize[0.023]}
-			,PlotTheme->"Scientific"
-			,PlotLegends->Placed[
-				Map[MaTeX["\\nu ="<>ToString[#,InputForm]]&,\[Nu]Range]
-			,{1.,0.588}
-			]
-		]
-		,ImageSize->500
 ]
