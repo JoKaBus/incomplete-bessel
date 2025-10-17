@@ -7,7 +7,7 @@
 
 /**
  * @file lattice_sum.c
- * @brief Calculates the Madelung constant.
+ * @brief Calculates a function value of the incomplete Bessel function.
  *
  * Minimal working example for the Epstein Zeta Library.
  * If the library is installed, compile with `gcc -o lattice_sum lattice_sum.c
@@ -25,35 +25,27 @@
 #include "epsteinZeta.h"
 
 /**
- * @brief calculate madelung constant and compare to precomputed value.
+ * @brief calculate a function value of the incomplete Bessel function and compare to
+ * precomputed value.
  *
- * Madelung constant:
- * sum_{i, j, k in Z} (-1)**(i + j + k) / sqrt(i**2 + j**2 + k**2)
  * @return true, if the difference to precomputed value is smaller than
  * 10**(-14)
  */
 int main() {
 
-    // Madelung constant found in literature
-    double madelungRef = 0.000022500045995757836;
     int dim = 1;
-    double x[] = {1.3}; // no shift
-    double y[] = {1.2}; // alternating sum
     double nu = 2.1;
-    double madelung = creal(incomplete_bessel_g(nu, dim, x, y));
-    printf("Bessel Ref:\t\t\t %.16lf\n", creal(madelung));
-    printf("Reference value:\t\t %.16lf\n", madelungRef);
-    printf("Relative error:\t\t\t +%.2e\n",
-           fabs(madelungRef - madelung) / fabs(madelungRef));
+    double x[] = {1.2};
+    double y[] = {1.3};
 
-    madelungRef = 0.00003616792891719726;
-    x[0] = 1.2; // no shift
-    y[0] = 1.3; // alternating sum
-    madelung = creal(incomplete_bessel_g(nu, dim, x, y));
-    printf("Bessel Ref:\t\t\t %.16lf\n", creal(madelung));
-    printf("Reference value:\t\t %.16lf\n", madelungRef);
-    printf("Relative error:\t\t\t +%.2e\n",
-           fabs(madelungRef - madelung) / fabs(madelungRef));
+    double besselRef =
+        0.00003616792891719726; // Reference value obtained by integration
+    double bessel = creal(incomplete_bessel_g(nu, dim, x, y));
 
-    return fabs(madelung - madelungRef) > pow(10, -14);
+    printf("C library Bessel value:\t\t %.16lf\n", creal(bessel));
+    printf("Integration reference value:\t %.16lf\n", besselRef);
+    printf("Relative error:\t\t\t +%.2e\n",
+           fabs(besselRef - bessel) / fabs(besselRef));
+
+    return fabs(bessel - besselRef) > pow(10, -14);
 }
