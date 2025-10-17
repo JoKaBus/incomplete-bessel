@@ -8,7 +8,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <img align="right" src="https://avatars.githubusercontent.com/u/177750891?v=4" width="110">
 
 [![DOI](https://img.shields.io/badge/DOI-10.48550%2FarXiv.2412.16317-blue.svg)](https://doi.org/10.48550/arXiv.2509.26274)
-# Incomplete Bessel Function on top of EpsteinLib
+# Implementation of the Incomplete Bessel Function in EpsteinLib
 
 This is a fork of [EpsteinLib](https://github.com/epsteinlib/epsteinlib) that includes an implementation of the incomplete Bessel function with the algorithm introduced in [1].
 
@@ -32,6 +32,14 @@ A Mathematica notebook replicating the results in [1] is included in `examples/m
 
 ## Installation
 The library can be installed following the [EpsteinLib installation instructions](https://github.com/epsteinlib/epsteinlib/blob/main/README.md#installation).
+
+## Testing
+After building, the library can be tested by running
+- `meson test -C build`.
+
+The minimal working example calculates a value of the incomplete Bessel function and compares it with a reference value obtained by high-precision integration.  In particular, if using the `nix`-based installation, the minimal working example can be executed with
+- `nix run`.
+
 ## References
 
 [1] Andreas A. Buchheit, Jonathan K. Busse, Torsten Keßler, and Filipp N. Rybakov.  “Zeta expansion for long-range interactions under periodic boundary conditions with applications to micromagnetics”.  arXiv preprint arXiv:2509.26274.
