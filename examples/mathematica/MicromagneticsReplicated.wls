@@ -35,6 +35,7 @@ Protect[Power];
 
 
 Error[ex_,approx_]=Min[{Abs[ex-approx],Abs[ex-approx]/Abs[ex]}];
+ErrorRel[ex_,approx_]=Abs[ex-approx]/Abs[ex];
 SetAttributes[Error,Listable]
 
 
@@ -232,7 +233,7 @@ ZetaLFarFieldCorrDer[\[Nu]_,A_,r_,c_,m_,nNear_,\[Alpha]Max_:2]:=Module[{d,\[Alph
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Direct Sum over the Short Range Double Integral*)
 
 
@@ -255,7 +256,7 @@ psi[2][r_,t_,c_]=E^((8 c \[Pi] r)/t^2-(\[Pi] (2 c+r)^2)/t^2)-2 E^((4 c \[Pi] (c+
 
 SummandDoubleIntegral[\[Nu]_,r_,c_,m_]:=Module[{d,res}
 	,d=Length[r]
-	;res=(1/Pi)^(-\[Nu]/2)/Gamma[\[Nu]/2]/Product[c[[i]]^2,{i,1,d}]2NIntegrate[
+	;res=(1/Pi)^(-\[Nu]/2)/Gamma[\[Nu]/2]/Product[c[[i]]^2,{i,1,d}]2Quiet@NIntegrate[
 	t^(-\[Nu]-1)*Product[psi[m[[i]]][r[[i]],t,c[[i]]/2],{i,1,d}]
 	,{t,0,Infinity}
 	,Exclusions->{0}
@@ -278,7 +279,7 @@ UNearCube[\[Nu]_,A_,r_,c_,m_,nNear_]:=Module[{d,n,zRangeNear,res}
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Potential Function*)
 
 
@@ -330,7 +331,7 @@ UCube[\[Nu]_,A_,r_,c_,m_,nNear_,\[Alpha]Max_]:=
 (*DzAsymptotic[NN_]:=N[1/3+DirichletBeta[3/2]Zeta[3/2]/(Pi*NN^3),60]*)
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Asymptotic Expansion Error*)
 
 
@@ -346,7 +347,7 @@ DzAsymptoticTab=ParallelTable[DzAsymptotic[NN],{NN,NNRange}];
 (*Calculate high-precision demagnetization values. Takes less than 40 seconds on a standard laptop with 12 kernels.*)
 
 
-{evalTime,DzTab}=AbsoluteTiming[Table[Dz[NN,3,2],{NN,NNRange}]]
+AbsoluteTiming[DzTab=Table[Dz[NN,3,2],{NN,NNRange}]]
 
 
 (* ::Text:: *)
@@ -386,7 +387,7 @@ pDeviation=ListLogLogPlot[
 ]
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Incomplete Bessel Error Values*)
 
 
@@ -428,13 +429,15 @@ GBesselRef[nu_,k_,r_]:=Piecewise[{
 (*Generate error tables. Takes less than 100 seconds an a standard laptop with 12 cores.*)
 
 
-{evalTime,{tabnum4Err,tabnum2Err,tabnu0Err,tabnu2Err}}=AbsoluteTiming@Table[
-	ParallelTable[With[
-		{nu={-4,-2,0,2}[[i]],k=vals[[1]],r=vals[[2]],num=vals[[3]],numimag=vals[[4]],time=vals[[5]]}
-		,{k,r,Error[Quiet@GBesselRef[nu,{k},{r}],num],time}
-		],{vals,{tabnum4,tabnum2,tabnu0,tabnu2}[[i]]}]
-	,{i,4}
-];
+AbsoluteTiming[
+	{tabnum4Err,tabnum2Err,tabnu0Err,tabnu2Err}=Table[
+		ParallelTable[With[
+			{nu={-4,-2,0,2}[[i]],k=vals[[1]],r=vals[[2]],num=vals[[3]],numimag=vals[[4]],time=vals[[5]]}
+			,{k,r,Error[Quiet@GBesselRef[nu,{k},{r}],num],time}
+			],{vals,{tabnum4,tabnum2,tabnu0,tabnu2}[[i]]}]
+		,{i,4}
+	];
+]
 
 
 (* ::Text:: *)
@@ -445,4 +448,99 @@ TableForm[
 	{Median[#[[All,3]]],Max[#[[All,3]]],Median[#[[All,4]]],Max[#[[All,4]]]}&/@{tabnum4Err,tabnum2Err,tabnu0Err,tabnu2Err}
 	,TableHeadings->(MaTeX[#]&/@{{-2,0,2,4},{"E_{\\rm med}","E_{\\rm max}","t_{\\rm med}","t_{\\rm max}"}})
 	,TableAlignments->Center
+]
+
+
+(* ::Section:: *)
+(*Demagnetization Asymptotic Expansion Scaling*)
+
+
+(* ::Text:: *)
+(*Exponents \[Nu] and truncation cutoffs L for the asymptotic expansion error. To replicate the figure from the paper, set *)
+(**)
+(*	\[Nu]Range=Range[1, 11, 2]*)
+(*	LRange=Range[0,10,2]*)
+
+
+\[Nu]Range={1,11};
+LRange=Range[1,10,3];
+
+
+(* ::Text:: *)
+(*Error table of the asymptotic expansion. Takes less that 80 seconds on a standard laptop with 12 cores.*)
+
+
+AbsoluteTiming[
+	sumTab=Table[
+		With[{lim=UCube[\[Nu],IdentityMatrix@2,{1,1,1}/2,{1,1,1}/100,{2,0,0},1,2]}
+			,Table[
+				{
+					L
+					,ErrorRel[
+						UNearCube[\[Nu],IdentityMatrix@2,{1,1,1}/2,{1,1,1}/100,{2,0,0},L]
+						,lim
+					]
+				}
+				,{L,LRange}
+				]
+			]
+		,{\[Nu],\[Nu]Range}
+	]
+]
+
+
+Show[
+		ListLogLogPlot[
+			sumTab
+			,PlotTheme->"Scientific"
+			,PlotRange->{{1-0.1,11},{100,2 10^(-15)}}
+			,FrameLabel->{
+			{MaTeX@"E_{\\rm{rel}}",None}
+			,{MaTeX@"N_{\\rm{cut}}",None}
+			}
+			,PlotStyle->{PointSize[0.03]}
+			,GridLines->{{1,2,5,10},10^Range[-14,2,5]}
+			,FrameTicks->{
+				{
+				Join[
+				{10^#,MaTeX[If[#>=-1,ToString[10^#],"10^{"<>ToString[#]<>"}"]],{0.014,0}}&/@Range[-14,2,5]
+				,{#,,{0.008,0}}&/@ Flatten[Table[i 10^j,{i,{1}},{j,-20,1,1}]]
+				]
+				,Join[
+				{10^#,,{0.014,0}}&/@Range[-16,0,5]
+				,{#,,{0.008,0}}&/@ Flatten[Table[i 10^j,{i,{1}},{j,-20,1,1}]]
+				]
+				}
+				,{
+				Join[
+				{#,MaTeX[ToString@#],{0.014,0}}&/@{1,2,5,10}
+				,{#,,{0.008,0}}&/@Join[{3/2},Range[1,10,1]]
+				]
+				,Join[
+				{#,,{0.014,0}}&/@{1,2,5,10}
+				,{#,,{0.008,0}}&/@Join[{3/2},Range[1,10,1]]
+				]
+				}
+				}
+		]
+		,Show[
+			Table[
+				LogLogPlot[n^-\[Nu]Range[[i]] 10^\[Nu]Range[[i]] sumTab[[i]][[-1]][[2]]
+				,{n,3,10}
+				,PlotStyle->Thick
+				,ColorFunction->(Directive[Colors[[i]],Opacity[Rescale[#1,{0,10}]]]&)
+				,ColorFunctionScaling->False
+				],{i,Length@\[Nu]Range}
+			],PlotRange->All
+		]
+		,ListLogPlot[
+			ConstantArray[{{100,100}},10]
+			,PlotStyle->{PointSize[0.023]}
+			,PlotTheme->"Scientific"
+			,PlotLegends->Placed[
+				Map[MaTeX["\\nu ="<>ToString[#,InputForm]]&,\[Nu]Range]
+			,{1.,0.588}
+			]
+		]
+		,ImageSize->500
 ]
